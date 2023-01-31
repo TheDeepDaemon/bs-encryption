@@ -15,6 +15,7 @@ typedef uint64 uint;
 
 using std::cout;
 using std::vector;
+using std::string;
 
 
 const unsigned BLOCK_LEN = 4;

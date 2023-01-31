@@ -114,7 +114,6 @@ void applyXOR(vector<uint8>& data, const vector<uint8>& key) {
 }
 
 
-
 template<typename T>
 void swap(std::vector<T>& vec, const size_t i1, const size_t i2) {
 	T temp = vec[i1];
@@ -123,6 +122,7 @@ void swap(std::vector<T>& vec, const size_t i1, const size_t i2) {
 }
 
 
+// the Fisher–Yates shuffle, included so std is not necessarily needed
 template<typename T>
 void nonStdShuffle(std::vector<T>& vec) {
 	for (size_t i = vec.size() - 1; i > 0; i--) {

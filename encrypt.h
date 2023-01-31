@@ -33,7 +33,7 @@ inline vector<uint8> encodeLength(const vector<uint8>& bytes, const ShaKeySet& k
 	vector<uint8> encoded((numBlocks + 1) * BLOCK_SIZE, 0);
 
 	// where to start copying from the keys
-	const uint keysBegin = (NUM_KEY_ROWS * NUM_KEY_COLS) - BLOCK_SIZE;
+	const uint keysBegin = ((uint)NUM_KEY_ROWS * NUM_KEY_COLS) - BLOCK_SIZE;
 
 	// where in data to start using the keys for padding
 	const uint dataBlockBegin = encoded.size() - BLOCK_SIZE;
@@ -63,7 +63,7 @@ inline vector<uint8> decodeLength(const uint8* const bytes, const uint size_) {
 }
 
 
-string encrypt(const vector<uint8>& rawData, const std::string& key, const StoredData storedKeys) {
+vector<uint8> encrypt(const vector<uint8>& rawData, const std::string& key, const StoredData storedKeys) {
 	_ASSERT(storedKeys.mappings.size() == NUM_ROUNDS);
 	ShaKeySet keys(key);
 
@@ -82,17 +82,22 @@ string encrypt(const vector<uint8>& rawData, const std::string& key, const Store
 		shuffleBits(ptr, totalSize, keys.data32[i]);
 	}
 
-	// return as hexadecimal representation of bytes
-	string hexStr = bytesToHexString(vector<uint8>(ptr, ptr + totalSize));
-	return hexStr;
+	// return as bytes
+	return vector<uint8>(ptr, ptr + totalSize);
+	
 }
 
 
-vector<uint8> decrypt(const string& rawData, const std::string& key, const StoredData storedKeys) {
+string encrypt(const string& rawData, const std::string& key, const StoredData storedKeys) {
+	return bytesToHexString(encrypt(vector<uint8>(rawData.begin(), rawData.end()), key, storedKeys));
+}
+
+
+vector<uint8> decrypt(const vector<uint8>& rawData, const std::string& key, const StoredData storedKeys) {
 	_ASSERT(storedKeys.mappings.size() == NUM_ROUNDS);
 	ShaKeySet keys(key);
 
-	vector<DataBlock> data = getDataBlocks(hexStringToBytes(rawData));
+	vector<DataBlock> data = getDataBlocks(rawData);
 	uint8* ptr = (uint8*)(void*)data.data();
 	uint totalSize = data.size() * sizeof(DataBlock);
 
@@ -112,6 +117,11 @@ vector<uint8> decrypt(const string& rawData, const std::string& key, const Store
 	return decodeLength(ptr, totalSize);
 }
 
+
+string decrypt(const string& rawData, const std::string& key, const StoredData storedKeys) {
+	vector<uint8> decrypted = decrypt(hexStringToBytes(rawData), key, storedKeys);
+	return string(decrypted.begin(), decrypted.end());
+}
 
 
 #endif // !ENCRYPT_H

@@ -32,7 +32,8 @@ struct StoredData {
 		uint buffSize = (mappings.size() * ByteMappingGrid::NUM_BYTES) + 1;
 		buffer.reserve(buffSize);
 
-		uint8 numMappings = mappings.size();
+		_ASSERT(mappings.size() <= UINT8_MAX);
+		uint8 numMappings = (uint8)mappings.size();
 		buffer.push_back(numMappings);
 
 		for (size_t i = 0; i < mappings.size(); i++) {
