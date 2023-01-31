@@ -1,2 +1,2 @@
 # bs-encryption
-A bullshit encryption algorithm.
+A bit shuffling encryption algorithm.
