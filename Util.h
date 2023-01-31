@@ -26,9 +26,7 @@ vector<uint8> toBytes(const string& str) {
 }
 
 
-std::pair<vector<uint8>, string> genDataAndKey() {
-
-	uint keyLength = 10;
+std::pair<vector<uint8>, string> genRandomDataAndKey(const uint dataLength, const uint keyLength) {
 
 	string key(keyLength, ' ');
 
@@ -36,7 +34,7 @@ std::pair<vector<uint8>, string> genDataAndKey() {
 		key[i] = (char)Random::randInt(UCHAR_MAX);
 	}
 
-	vector<uint8> data(30);
+	vector<uint8> data(dataLength);
 
 	for (uint8& b : data) {
 		b = (char)Random::randInt(UCHAR_MAX);
@@ -134,6 +132,61 @@ void nonStdShuffle(std::vector<T>& vec) {
 }
 
 
+template<typename T>
+bool vectorsEqual(const vector<T>& vec1, const vector<T>& vec2) {
+	if (vec1.size() != vec2.size()) {
+		return false;
+	}
+	for (size_t i = 0; i < vec1.size(); i++) {
+		if (vec1[i] != vec2[i]) {
+			return false;
+		}
+	}
+	return true;
+}
+
+
+string bytesToHexString(const vector<unsigned char>& str) {
+	vector<char> encoded(str.size() * 2);
+
+	string temp;
+
+	for (size_t i = 0; i < str.size(); i++) {
+		std::stringstream ss;
+		ss << std::hex << (int)str[i];
+		ss >> temp;
+		size_t i_ = i * 2;
+		if (temp.size() > 1) {
+			encoded[i_] = temp[0];
+			encoded[i_ + 1] = temp[1];
+		}
+		else {
+			encoded[i_] = '0';
+			encoded[i_ + 1] = temp[0];
+		}
+	}
+
+	return string(encoded.begin(), encoded.end());
+}
+
+
+int byteFromHex(const string& str) {
+	std::stringstream ss;
+	ss << std::hex << str;
+	int n;
+	ss >> n;
+	return n;
+}
+
+
+vector<unsigned char> hexStringToBytes(const string& str) {
+	size_t n = str.size() / 2;
+	vector<unsigned char> bytes(n);
+	for (size_t i = 0; i < n; i++) {
+		bytes[i] = byteFromHex(str.substr(i * 2, 2));
+	}
+	return bytes;
+}
 
 
 #endif // !UTIL_H

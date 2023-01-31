@@ -1,12 +1,11 @@
 #ifndef BYTE_MAPPING_H
 #define BYTE_MAPPING_H
 #include"Definitions.h"
-#include<random>
 #include"file_util.h"
 #include"DataBlock.h"
 #include"functional_util.h"
 #include"random_util.h"
-
+#include<random>
 
 
 
@@ -15,7 +14,6 @@ struct ByteMapping {
 
 	uint8 mapping[SIZE];
 	uint8 inverse[SIZE];
-
 
 	template<typename T>
 	void load(const vector<T>& data) {
@@ -67,11 +65,11 @@ struct ByteMapping {
 		dump<uint8>(fname, mapping, SIZE);
 	}
 
-	uint8 mapByte(const uint8& c) {
+	uint8 mapByte(const uint8& c) const {
 		return mapping[c];
 	}
 
-	uint8 invMapByte(const uint8& c) {
+	uint8 invMapByte(const uint8& c) const {
 		return inverse[c];
 	}
 
@@ -160,10 +158,15 @@ struct ByteMappingGrid {
 	static const int rows = BLOCK_LEN;
 	static const int cols = BLOCK_LEN;
 	static const int GRID_SIZE = rows * cols;
+	static const int NUM_BYTES = GRID_SIZE * ByteMapping::SIZE;
 
 	ByteMapping data[GRID_SIZE];
 
 	ByteMapping& get(const unsigned row, const unsigned col) {
+		return data[(row * cols) + col];
+	}
+
+	const ByteMapping& get(const unsigned row, const unsigned col) const {
 		return data[(row * cols) + col];
 	}
 
@@ -187,15 +190,15 @@ struct ByteMappingGrid {
 		}
 	}
 
-	uint8 mapByte(const unsigned row, const unsigned col, const uint8 byte) {
+	uint8 mapByte(const unsigned row, const unsigned col, const uint8 byte) const {
 		return get(row, col).mapByte(byte);
 	}
 
-	uint8 invMapByte(const unsigned row, const unsigned col, const uint8 byte) {
+	uint8 invMapByte(const unsigned row, const unsigned col, const uint8 byte) const {
 		return get(row, col).invMapByte(byte);
 	}
 
-	void mapBytes(DataBlock& block) {
+	void mapBytes(DataBlock& block) const {
 		for (int i = 0; i < rows; i++) {
 			for (int j = 0; j < cols; j++) {
 				block.get(i, j) = mapByte(i, j, block.get(i, j));
@@ -203,7 +206,7 @@ struct ByteMappingGrid {
 		}
 	}
 
-	void invMapBytes(DataBlock& block) {
+	void invMapBytes(DataBlock& block) const {
 		for (int i = 0; i < rows; i++) {
 			for (int j = 0; j < cols; j++) {
 				block.get(i, j) = invMapByte(i, j, block.get(i, j));

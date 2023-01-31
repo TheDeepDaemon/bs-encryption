@@ -55,7 +55,7 @@ union ShaKeySet {
 			get(0, i) = firstRow.bytes[i] ^ firstRow.bytes[4 + i];
 		}
 
-		std::vector<uint8> rcon = computeRcon(10);
+		std::vector<uint8> rcon = computeRcon(NUM_KEY_ROWS);
 
 		for (unsigned i = 1; i < NUM_KEY_ROWS; i++) {
 			uint8 rotated = rotateBitsRight(get(i - 1, 3), 3);

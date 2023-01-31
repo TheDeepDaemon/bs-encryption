@@ -83,33 +83,8 @@ inline vector<DataBlock> getDataBlocks(const vector<uint8>& data) {
 }
 
 
-inline vector<uint8> encodeLength(const vector<uint8>& bytes) {
-	const uint32 numBytes = (uint32)bytes.size();
-
-	vector<uint8> encodedWithLen(bytes.size() + sizeof(numBytes), 0);
-
-	memcpy(encodedWithLen.data(), &numBytes, sizeof(numBytes));
-	memcpy(encodedWithLen.data() + sizeof(numBytes), bytes.data(), bytes.size() * sizeof(uint8));
-
-	return encodedWithLen;
-}
 
 
-inline vector<uint8> decodeLength(const uint8* const bytes, const uint maxSize) {
-	uint32 numBytes = 0;
-
-	memcpy(&numBytes, bytes, sizeof(numBytes));
-
-	if (numBytes > maxSize) {
-		return vector<uint8>(bytes, bytes + maxSize);
-	}
-
-	const uint8* const begin = bytes + sizeof(numBytes);
-
-	vector<uint8> originalBytes(begin, begin + numBytes);
-
-	return originalBytes;
-}
 
 
 inline vector<void(*)(DataBlock&)> combineVecs(const vector<void(*)(DataBlock&)>& v1, const vector<void(*)(DataBlock&)>& v2) {
