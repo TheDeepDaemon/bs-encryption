@@ -3,7 +3,7 @@
 #include"Definitions.h"
 #include"functional_util.h"
 #include"Util.h"
-#include<random>
+#include"BitArray.h"
 
 
 bool getBit(const uint8 n, const int offset) {
@@ -91,6 +91,15 @@ void shuffleBits(uint8* bytes, const uint numBytes, const uint32 seed) {
 
 	// convert to bytes
 	getBytes(bytes, bits);
+}
+
+
+void shuffleBitsSaveMemory(uint8* bytes, const uint numBytes, const uint32 seed) {
+	// seed random number generator
+	std::mt19937_64 gen = getShuffleBitsGenerator(seed);
+
+	// shuffle it
+	shuffleBitsAsBitArray(bytes, numBytes, gen);
 }
 
 

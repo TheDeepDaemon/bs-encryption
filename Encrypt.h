@@ -8,7 +8,6 @@
 #include"FileBuffer.h"
 #include"Util.h"
 #include"StoredData.h"
-#include<bitset>
 
 
 
@@ -63,7 +62,7 @@ inline vector<uint8> decodeLength(const uint8* const bytes, const uint size_) {
 }
 
 
-vector<uint8> encrypt(const vector<uint8>& rawData, const std::string& key, const StoredData& storedKeys) {
+vector<uint8> encrypt_(const vector<uint8>& rawData, const std::string& key, const StoredData& storedKeys, const bool saveMemory) {
 	_ASSERT(storedKeys.mappings.size() == NUM_ROUNDS);
 	ShaKeySet keys(key);
 
@@ -78,13 +77,23 @@ vector<uint8> encrypt(const vector<uint8>& rawData, const std::string& key, cons
 			storedKeys.mappings[i].mapBytes(data[j]);
 		}
 
-		// shuffle bits
-		shuffleBits(ptr, totalSize, keys.data32[i]);
+		if (!saveMemory) {
+			// shuffle bits normally
+			shuffleBits(ptr, totalSize, keys.data32[i]);
+		}
+		else {
+			// shuffle individual bits (no boolean array) in order to save memory
+			shuffleBitsSaveMemory(ptr, totalSize, keys.data32[i]);
+		}
 	}
 
 	// return as bytes
 	return vector<uint8>(ptr, ptr + totalSize);
-	
+}
+
+
+vector<uint8> encrypt(const vector<uint8>& rawData, const std::string& key, const StoredData& storedKeys) {
+	return encrypt_(rawData, key, storedKeys, false);
 }
 
 

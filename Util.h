@@ -74,6 +74,26 @@ void printBits(const T& x) {
 }
 
 
+template<typename T>
+void printVectorBits(const vector<T>& vec) {
+	for (uint i = 0; i < vec.size(); i++) {
+		printBits(vec[i]);
+		cout << ' ';
+	}
+	cout << '\n';
+}
+
+
+template<typename T>
+void printArrayBits(const T* arr, const uint size) {
+	for (uint i = 0; i < size; i++) {
+		printBits(arr[i]);
+		cout << ' ';
+	}
+	cout << '\n';
+}
+
+
 void printBlockBits(const DataBlock& block) {
 	for (unsigned i = 0; i < BLOCK_LEN; i++) {
 		for (unsigned j = 0; j < BLOCK_LEN; j++) {
@@ -122,7 +142,7 @@ void swap(std::vector<T>& vec, const size_t i1, const size_t i2) {
 }
 
 
-// the Fisher–Yates shuffle, included so std is not necessarily needed
+// the Fisher–Yates shuffle
 template<typename T>
 void shuffleVector(std::vector<T>& vec, std::mt19937_64& gen) {
 	for (size_t i = vec.size() - 1; i > 0; i--) {
