@@ -31,13 +31,13 @@ std::pair<vector<uint8>, string> genRandomDataAndKey(const uint dataLength, cons
 	string key(keyLength, ' ');
 
 	for (int i = 0; i < keyLength; i++) {
-		key[i] = (char)Random::randInt(UCHAR_MAX);
+		key[i] = (char)Random::randInt(UCHAR_MAX + 1);
 	}
 
 	vector<uint8> data(dataLength);
 
 	for (uint8& b : data) {
-		b = (char)Random::randInt(UCHAR_MAX);
+		b = (char)Random::randInt(UCHAR_MAX + 1);
 	}
 
 	return std::pair<vector<uint8>, string>(data, key);
