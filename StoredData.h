@@ -51,6 +51,13 @@ struct StoredData {
 		}
 	}
 
+	StoredData(const string& fname) {
+		loadData(fname);
+	}
+
+	StoredData() : mappings() {
+	}
+
 };
 
 

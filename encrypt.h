@@ -63,7 +63,7 @@ inline vector<uint8> decodeLength(const uint8* const bytes, const uint size_) {
 }
 
 
-vector<uint8> encrypt(const vector<uint8>& rawData, const std::string& key, const StoredData storedKeys) {
+vector<uint8> encrypt(const vector<uint8>& rawData, const std::string& key, const StoredData& storedKeys) {
 	_ASSERT(storedKeys.mappings.size() == NUM_ROUNDS);
 	ShaKeySet keys(key);
 
@@ -88,12 +88,12 @@ vector<uint8> encrypt(const vector<uint8>& rawData, const std::string& key, cons
 }
 
 
-string encrypt(const string& rawData, const std::string& key, const StoredData storedKeys) {
+string encrypt(const string& rawData, const std::string& key, const StoredData& storedKeys) {
 	return bytesToHexString(encrypt(vector<uint8>(rawData.begin(), rawData.end()), key, storedKeys));
 }
 
 
-vector<uint8> decrypt(const vector<uint8>& rawData, const std::string& key, const StoredData storedKeys) {
+vector<uint8> decrypt(const vector<uint8>& rawData, const std::string& key, const StoredData& storedKeys) {
 	_ASSERT(storedKeys.mappings.size() == NUM_ROUNDS);
 	ShaKeySet keys(key);
 
@@ -118,10 +118,29 @@ vector<uint8> decrypt(const vector<uint8>& rawData, const std::string& key, cons
 }
 
 
-string decrypt(const string& rawData, const std::string& key, const StoredData storedKeys) {
+string decrypt(const string& rawData, const std::string& key, const StoredData& storedKeys) {
 	vector<uint8> decrypted = decrypt(hexStringToBytes(rawData), key, storedKeys);
 	return string(decrypted.begin(), decrypted.end());
 }
 
+
+inline void processFile(
+	const string& inputFileName,
+	const string& outputFileName,
+	const string& key,
+	const string& storedKeysFile,
+	vector<uint8> processFunction(const vector<uint8>&, const std::string&, const StoredData&)) {
+	const vector<uint8> bytes = slurp<uint8>(inputFileName);
+	StoredData storedKeys(storedKeysFile);
+	dump<uint8>(outputFileName, processFunction(bytes, key, storedKeys));
+}
+
+void encryptFile(const string& inputFileName, const string& outputFileName, const string& key, const string& storedKeysFile) {
+	processFile(inputFileName, outputFileName, key, storedKeysFile, encrypt);
+}
+
+void decryptFile(const string& inputFileName, const string& outputFileName, const string& key, const string& storedKeysFile) {
+	processFile(inputFileName, outputFileName, key, storedKeysFile, decrypt);
+}
 
 #endif // !ENCRYPT_H

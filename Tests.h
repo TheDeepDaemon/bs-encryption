@@ -229,6 +229,25 @@ bool testWrongStoredData() {
 }
 
 
+bool testFileEncryption() {
+	string fname = "test-file-encryption.txt";
+	string encryptedFname = "test-file-encryption-encrypted.txt";
+	string decryptedFname = "test-file-encryption-decrypted.txt";
+
+	StoredData storedKeys;
+	storedKeys.genRandomData(NUM_ROUNDS);
+	storedKeys.save("test-filename");
+
+	encryptFile(fname, encryptedFname, "encryption-key1", "test-filename");
+	decryptFile(encryptedFname, decryptedFname, "encryption-key1", "test-filename");
+
+	string originalFile = slurps(fname);
+	string decryptedFile = slurps(decryptedFname);
+
+	return originalFile == decryptedFile;
+}
+
+
 bool runTests() {
 
 	const uint lengthEncodingStartSize = 10;
@@ -281,17 +300,22 @@ bool runTests() {
 	}
 
 	if (!testZeroVector()) {
-		cout << "Zero vector test failed\n";
+		cout << "Zero vector test failed.\n";
 		return false;
 	}
 
 	if (!testStoredData()) {
-		cout << "Stored data test failed\n";
+		cout << "Stored data test failed.\n";
 		return false;
 	}
 
 	if (!testWrongStoredData()) {
-		cout << "Wrong stored data test failed\n";
+		cout << "Wrong stored data test failed.\n";
+		return false;
+	}
+
+	if (!testFileEncryption()) {
+		cout << "File encryption test failed.\n";
 		return false;
 	}
 
