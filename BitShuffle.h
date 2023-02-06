@@ -2,9 +2,8 @@
 #define BITSHUFFLE_H
 #include"Definitions.h"
 #include"functional_util.h"
+#include"Util.h"
 #include<random>
-
-
 
 
 bool getBit(const uint8 n, const int offset) {
@@ -88,7 +87,7 @@ void shuffleBits(uint8* bytes, const uint numBytes, const uint32 seed) {
 	std::vector<bool> bits = getBits(bytes, numBytes);
 
 	// shuffle it
-	std::shuffle(bits.begin(), bits.end(), gen);
+	shuffleVector(bits, gen);
 
 	// convert to bytes
 	getBytes(bytes, bits);
@@ -99,7 +98,7 @@ void invShuffleBits(uint8* bytes, const uint numBytes, const uint32 seed) {
 	// get the array of bits
 	std::vector<bool> bits = getBits(bytes, numBytes);
 
-	// get the permutation vector: 
+	// get the permutation vector:
 	// vector[0] = 0, vector[1] = 1, vector[2] = 2, ...
 	std::vector<uint> perm = getPermutationVector(bits.size());
 
@@ -107,7 +106,7 @@ void invShuffleBits(uint8* bytes, const uint numBytes, const uint32 seed) {
 	std::mt19937_64 gen = getShuffleBitsGenerator(seed);
 
 	// shuffle the permutation vector
-	std::shuffle(perm.begin(), perm.end(), gen);
+	shuffleVector(perm, gen);
 
 	// get the inverse of the permutation
 	std::vector<uint> invPerm = getInvPermutation(perm);

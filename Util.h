@@ -124,7 +124,7 @@ void swap(std::vector<T>& vec, const size_t i1, const size_t i2) {
 
 // the Fisher–Yates shuffle, included so std is not necessarily needed
 template<typename T>
-void nonStdShuffle(std::vector<T>& vec, std::mt19937_64& gen) {
+void shuffleVector(std::vector<T>& vec, std::mt19937_64& gen) {
 	for (size_t i = vec.size() - 1; i > 0; i--) {
 		size_t r = gen() % (i + 1);
 		swap(vec, i, r);
