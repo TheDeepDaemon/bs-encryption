@@ -6,6 +6,7 @@
 #include"Util.h"
 #include"KeySet.h"
 #include"Encrypt.h"
+#include<filesystem>
 
 
 // verify that length encoding is working as intended
@@ -148,7 +149,12 @@ bool testCorruptedData() {
 
 	string encrypted = encrypt(originalStr, "encryption key", storedKeys);
 
-	encrypted[4] = 'a';
+	if (encrypted[4] != 'a') {
+		encrypted[4] = 'a';
+	}
+	else {
+		encrypted[4] = 'f';
+	}
 
 	string decrypted = decrypt(encrypted, "encryption key", storedKeys);
 
@@ -180,10 +186,12 @@ bool testZeroVector() {
 	return encryptedIsNotZero && correctlyDecrypted;
 }
 
+
+// test that stored keys are saved properly
 bool testStoredData() {
 	StoredData storedKeys1;
 	storedKeys1.genRandomData(NUM_ROUNDS);
-	storedKeys1.save("test-filename");
+	storedKeys1.save("test-files/test-filename");
 
 	const string originalStr =
 		"Lorem Ipsum, this is a message, this is more text, the red fox jumped over the lazy dog";
@@ -195,21 +203,23 @@ bool testStoredData() {
 	}
 
 	StoredData storedKeys2;
-	storedKeys2.loadData("test-filename");
+	storedKeys2.loadData("test-files/test-filename");
 
 	const string decrypted = decrypt(encrypted, "encryption key", storedKeys2);
 
 	return (decrypted == originalStr);
 }
 
+
+// test that the wrong stored keys will decrypt properly
 bool testWrongStoredData() {
 	StoredData storedKeys1;
 	storedKeys1.genRandomData(NUM_ROUNDS);
-	storedKeys1.save("test-filename");
+	storedKeys1.save("test-files/test-filename");
 
 	StoredData wrongStoredKeys;
 	wrongStoredKeys.genRandomData(NUM_ROUNDS);
-	wrongStoredKeys.save("wrong-test-filename");
+	wrongStoredKeys.save("test-files/wrong-test-filename");
 
 	const string originalStr =
 		"Lorem Ipsum, this is a message, this is more text, the red fox jumped over the lazy dog";
@@ -221,7 +231,7 @@ bool testWrongStoredData() {
 	}
 
 	StoredData storedKeys2;
-	storedKeys2.loadData("wrong-test-filename");
+	storedKeys2.loadData("test-files/wrong-test-filename");
 
 	const string decrypted = decrypt(encrypted, "encryption key", storedKeys2);
 
@@ -229,17 +239,21 @@ bool testWrongStoredData() {
 }
 
 
+// test that file encryption works
 bool testFileEncryption() {
-	string fname = "test-file-encryption.txt";
-	string encryptedFname = "test-file-encryption-encrypted.txt";
-	string decryptedFname = "test-file-encryption-decrypted.txt";
+	string fname = "test-files/test-file-encryption.txt";
+	string encryptedFname = "test-files/test-file-encryption-encrypted.txt";
+	string decryptedFname = "test-files/test-file-encryption-decrypted.txt";
 
 	StoredData storedKeys;
 	storedKeys.genRandomData(NUM_ROUNDS);
-	storedKeys.save("test-filename");
+	storedKeys.save("test-files/test-filename");
 
-	encryptFile(fname, encryptedFname, "encryption-key1", "test-filename");
-	decryptFile(encryptedFname, decryptedFname, "encryption-key1", "test-filename");
+	string str = "This is a test file. Test data, test data, test data, test data, test data, test data, test data.";
+	dump(fname, str);
+
+	encryptFile(fname, encryptedFname, "encryption-key1", "test-files/test-filename");
+	decryptFile(encryptedFname, decryptedFname, "encryption-key1", "test-files/test-filename");
 
 	string originalFile = slurps(fname);
 	string decryptedFile = slurps(decryptedFname);
@@ -249,6 +263,8 @@ bool testFileEncryption() {
 
 
 bool runTests() {
+
+	std::filesystem::create_directories("./test-files");
 
 	const uint lengthEncodingStartSize = 10;
 	const uint lengthEncodingEndSize = 100;
