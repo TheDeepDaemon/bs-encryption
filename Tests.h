@@ -87,7 +87,7 @@ bool testByteMapping() {
 // test encryption for random data of a specific size and with a specific key length
 bool testBytesEncryptionAtSize(const uint dataLength, const uint keyLength) {
 	StoredData storedKeys;
-	storedKeys.genRandomData(NUM_ROUNDS);
+	storedKeys.genRandomData();
 
 	std::pair<vector<uint8>, string> dataKeyPair = genRandomDataAndKey(dataLength, keyLength);
 
@@ -105,7 +105,7 @@ bool testBytesEncryptionAtSize(const uint dataLength, const uint keyLength) {
 // verify that vectors of bytes are encrypted and decrypted correctly
 bool testBytesEncryption() {
 	StoredData storedKeys;
-	storedKeys.genRandomData(NUM_ROUNDS);
+	storedKeys.genRandomData();
 
 	const string originalStr =
 		"Lorem Ipsum, this is a message, this is more text, the red fox jumped over the lazy dog";
@@ -126,7 +126,7 @@ bool testBytesEncryption() {
 // verify that strings are encrypted and decrypted correctly
 bool testStringEncryption() {
 	StoredData storedKeys;
-	storedKeys.genRandomData(NUM_ROUNDS);
+	storedKeys.genRandomData();
 
 	const string originalStr =
 		"Lorem Ipsum, this is a message, this is more text, the red fox jumped over the lazy dog";
@@ -146,7 +146,7 @@ bool testStringEncryption() {
 // verify that if encrypted data is corrupted, the decrypted result is corrupted
 bool testCorruptedData() {
 	StoredData storedKeys;
-	storedKeys.genRandomData(NUM_ROUNDS);
+	storedKeys.genRandomData();
 
 	const string originalStr =
 		"Lorem Ipsum, this is a message, this is more text, the red fox jumped over the lazy dog";
@@ -169,7 +169,7 @@ bool testCorruptedData() {
 // verify that the zero vector does not give a zero vector when encrypted
 bool testZeroVector() {
 	StoredData storedKeys;
-	storedKeys.genRandomData(NUM_ROUNDS);
+	storedKeys.genRandomData();
 
 	uint vectorSizeFloor = 10;
 	uint vectorSizeCeil = 100;
@@ -196,7 +196,7 @@ bool testStoredData() {
 	string testDirectory = "test-files/";
 
 	StoredData storedKeys1;
-	storedKeys1.genRandomData(NUM_ROUNDS);
+	storedKeys1.genRandomData();
 	storedKeys1.save(testDirectory + "test-key-filename");
 
 	const string originalStr =
@@ -222,10 +222,10 @@ bool testWrongStoredData() {
 	string testDirectory = "test-files/";
 
 	StoredData storedKeys1;
-	storedKeys1.genRandomData(NUM_ROUNDS);
+	storedKeys1.genRandomData();
 
 	StoredData wrongStoredKeys;
-	wrongStoredKeys.genRandomData(NUM_ROUNDS);
+	wrongStoredKeys.genRandomData();
 	wrongStoredKeys.save(testDirectory + "wrong-test-key-filename");
 
 	const string originalStr =
@@ -254,14 +254,15 @@ bool testFileEncryption() {
 	string decryptedFname = testDirectory + "test-file-encryption-decrypted.txt";
 
 	StoredData storedKeys;
-	storedKeys.genRandomData(NUM_ROUNDS);
+	storedKeys.genRandomData();
 	storedKeys.save(testDirectory + "test-key-filename");
 
 	string str = "This is a test file. Test data, test data, test data, test data, test data, test data, test data.";
 	dump(fname, str);
 
-	encryptFile(fname, encryptedFname, "encryption-key1", testDirectory + "test-key-filename");
-	decryptFile(encryptedFname, decryptedFname, "encryption-key1", testDirectory + "test-key-filename");
+	string storedKeysFname = testDirectory + "test-key-filename";
+	encryptFile(fname, encryptedFname, storedKeysFname, "encryption-key1");
+	decryptFile(encryptedFname, decryptedFname, storedKeysFname, "encryption-key1");
 
 	string originalFile = slurps(fname);
 	string decryptedFile = slurps(decryptedFname);

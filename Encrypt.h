@@ -154,12 +154,37 @@ inline void processFile(
 	dump<uint8>(outputFileName, processFunction(bytes, key, storedKeys));
 }
 
-void encryptFile(const string& inputFileName, const string& outputFileName, const string& key, const string& storedKeysFile) {
+
+void encryptFile(const string& inputFileName, const string& outputFileName, const string& storedKeysFile, const string& key) {
 	processFile(inputFileName, outputFileName, key, storedKeysFile, encrypt);
 }
 
-void decryptFile(const string& inputFileName, const string& outputFileName, const string& key, const string& storedKeysFile) {
+
+void decryptFile(const string& inputFileName, const string& outputFileName, const string& storedKeysFile, const string& key) {
 	processFile(inputFileName, outputFileName, key, storedKeysFile, decrypt);
 }
+
+
+inline void processFileAsHex(
+	const string& inputFileName,
+	const string& outputFileName,
+	const string& key,
+	const string& storedKeysFile,
+	string processFunction(const string&, const std::string&, const StoredData&)) {
+	const string data = slurps(inputFileName);
+	StoredData storedKeys(storedKeysFile);
+	dump(outputFileName, processFunction(data, key, storedKeys));
+}
+
+
+void encryptFileAsHex(const string& inputFileName, const string& outputFileName, const string& storedKeysFile, const string& key) {
+	processFileAsHex(inputFileName, outputFileName, key, storedKeysFile, encrypt);
+}
+
+
+void decryptFileAsHex(const string& inputFileName, const string& outputFileName, const string& storedKeysFile, const string& key) {
+	processFileAsHex(inputFileName, outputFileName, key, storedKeysFile, decrypt);
+}
+
 
 #endif // !ENCRYPT_H

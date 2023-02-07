@@ -43,10 +43,10 @@ struct StoredData {
 		dump(fname, buffer);
 	}
 
-	void genRandomData(const uint n) {
+	void genRandomData() {
 		mappings.clear();
-		mappings.reserve(n);
-		for (uint i = 0; i < n; i++) {
+		mappings.reserve(NUM_ROUNDS);
+		for (uint i = 0; i < NUM_ROUNDS; i++) {
 			mappings.push_back(ByteMappingGrid::genByteMappingGrid());
 		}
 	}
