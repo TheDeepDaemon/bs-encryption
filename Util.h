@@ -60,9 +60,20 @@ void shuffleBytes(DataBlock& block, const uint32 seed) {
 
 
 template<typename T>
-void shuffleVector(std::vector<T>& vec, const uint32 seed) {
-	std::mt19937_64 gen = getShuffleBytesGenerator(seed);
-	std::shuffle(vec.begin(), vec.end(), gen);
+void swap(T* arr, const size_t i1, const size_t i2) {
+	const T temp = arr[i1];
+	arr[i1] = arr[i2];
+	arr[i2] = temp;
+}
+
+
+// the Fisher–Yates shuffle
+template<typename T>
+void shuffleArray(T* arr, const uint size, std::mt19937_64& gen) {
+	for (size_t i = size - 1; i > 0; i--) {
+		size_t r = gen() % (i + 1);
+		swap(arr, i, r);
+	}
 }
 
 
@@ -130,24 +141,6 @@ void applyXOR(vector<uint8>& data, const vector<uint8>& key) {
 	for (size_t i = 0; i < data.size(); i++) {
 		size_t k = i % key.size();
 		data[i] = data[i] ^ key[k];
-	}
-}
-
-
-template<typename T>
-void swap(std::vector<T>& vec, const size_t i1, const size_t i2) {
-	T temp = vec[i1];
-	vec[i1] = vec[i2];
-	vec[i2] = temp;
-}
-
-
-// the Fisher–Yates shuffle
-template<typename T>
-void shuffleVector(std::vector<T>& vec, std::mt19937_64& gen) {
-	for (size_t i = vec.size() - 1; i > 0; i--) {
-		size_t r = gen() % (i + 1);
-		swap(vec, i, r);
 	}
 }
 

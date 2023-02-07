@@ -41,7 +41,11 @@ bool testShuffleBits(const uint size) {
 
 	uint32 seed = (uint32)Random::randInt(UINT32_MAX);
 
-	shuffleBits(ptr, size, seed);
+	bool* tempArr = new bool[size * 8];
+
+	shuffleBits(ptr, size, seed, tempArr);
+
+	delete[] tempArr;
 
 	if (bytes == originalBytes) {
 		return false;

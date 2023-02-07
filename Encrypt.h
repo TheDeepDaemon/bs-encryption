@@ -70,6 +70,12 @@ vector<uint8> encrypt_(const vector<uint8>& rawData, const std::string& key, con
 	uint8* ptr = (uint8*)(void*)data.data();
 	uint totalSize = (data.size() * sizeof(DataBlock));
 
+	bool* tempArr = nullptr;
+
+	if (!saveMemory) {
+		tempArr = new bool[totalSize * 8];
+	}
+
 	for (unsigned i = 0; i < NUM_ROUNDS; i++) {
 
 		// bytemapping
@@ -79,12 +85,16 @@ vector<uint8> encrypt_(const vector<uint8>& rawData, const std::string& key, con
 
 		if (!saveMemory) {
 			// shuffle bits normally
-			shuffleBits(ptr, totalSize, keys.data32[i]);
+			shuffleBits(ptr, totalSize, keys.data32[i], tempArr);
 		}
 		else {
 			// shuffle individual bits (no boolean array) in order to save memory
 			shuffleBitsSaveMemory(ptr, totalSize, keys.data32[i]);
 		}
+	}
+
+	if (!saveMemory) {
+		delete[] tempArr;
 	}
 
 	// return as bytes

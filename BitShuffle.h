@@ -26,10 +26,19 @@ std::vector<bool> getBits(const uint8* bytes, const uint size) {
 }
 
 
-void getBytes(uint8* bytes, const std::vector<bool>& bits) {
-	_ASSERT(bits.size() % 8 == 0);
-	const size_t numBytes = bits.size() / 8;
+void setBoolArrFromBits(bool* copyTo, const uint8* bytes, const uint size) {
+	uint boolArr = size * 8;
 
+	for (size_t i = 0; i < size; i++) {
+		const uint8 n = bytes[i];
+		for (int j = 7, k = 0; j >= 0; j--, k++) {
+			copyTo[(i * 8) + k] = getBit(n, j);
+		}
+	}
+}
+
+
+void setBytesFromBits(uint8* bytes, const uint numBytes, const bool* bits) {
 	for (size_t i = 0; i < numBytes; i++) {
 		const size_t index = i * 8;
 
@@ -51,11 +60,27 @@ std::vector<T> applyPermutation(const std::vector<T>& vec, const std::vector<uin
 	std::vector<T> permuted;
 	permuted.reserve(vec.size());
 
-	for (size_t i = 0; i < vec.size(); i++) {
+	for (uint i = 0; i < vec.size(); i++) {
 		permuted.push_back(vec[permutation[i]]);
 	}
 
 	return permuted;
+}
+
+
+template<typename T>
+void applyPermutation(T* arr, const std::vector<uint>& permutation) {
+	uint n = permutation.size();
+	T* tempArr = new T[n];
+	for (uint i = 0; i < n; i++) {
+		tempArr[i] = arr[i];
+	}
+
+	for (uint i = 0; i < n; i++) {
+		arr[i] = tempArr[permutation[i]];
+	}
+
+	delete[] tempArr;
 }
 
 
@@ -79,18 +104,18 @@ std::mt19937_64 getShuffleBitsGenerator(const uint64 seed) {
 }
 
 
-void shuffleBits(uint8* bytes, const uint numBytes, const uint32 seed) {
+void shuffleBits(uint8* bytes, const uint numBytes, const uint32 seed, bool* tempArr) {
 	// seed random number generator
 	std::mt19937_64 gen = getShuffleBitsGenerator(seed);
 
 	// get array of bits
-	std::vector<bool> bits = getBits(bytes, numBytes);
+	setBoolArrFromBits(tempArr, bytes, numBytes);
 
 	// shuffle it
-	shuffleVector(bits, gen);
+	shuffleArray(tempArr, numBytes * 8, gen);
 
 	// convert to bytes
-	getBytes(bytes, bits);
+	setBytesFromBits(bytes, numBytes, tempArr);
 }
 
 
@@ -105,26 +130,29 @@ void shuffleBitsSaveMemory(uint8* bytes, const uint numBytes, const uint32 seed)
 
 void invShuffleBits(uint8* bytes, const uint numBytes, const uint32 seed) {
 	// get the array of bits
-	std::vector<bool> bits = getBits(bytes, numBytes);
+	bool* bits = new bool[numBytes * 8];
+	setBoolArrFromBits(bits, bytes, numBytes);
 
 	// get the permutation vector:
 	// vector[0] = 0, vector[1] = 1, vector[2] = 2, ...
-	std::vector<uint> perm = getPermutationVector(bits.size());
+	std::vector<uint> perm = getPermutationVector(numBytes * 8);
 
 	// seed random number generator
 	std::mt19937_64 gen = getShuffleBitsGenerator(seed);
 
 	// shuffle the permutation vector
-	shuffleVector(perm, gen);
+	shuffleArray(perm.data(), perm.size(), gen);
 
 	// get the inverse of the permutation
 	std::vector<uint> invPerm = getInvPermutation(perm);
 
 	// apply it to the bits
-	bits = applyPermutation(bits, invPerm);
+	applyPermutation(bits, invPerm);
 
 	// convert to bytes
-	getBytes(bytes, bits);
+	setBytesFromBits(bytes, numBytes, bits);
+
+	delete[] bits;
 }
 
 
