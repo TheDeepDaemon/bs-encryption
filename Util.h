@@ -159,8 +159,8 @@ bool vectorsEqual(const vector<T>& vec1, const vector<T>& vec2) {
 }
 
 
-string bytesToHexString(const vector<unsigned char>& str) {
-	vector<char> encoded(str.size() * 2);
+vector<uint8> bytesToHex(const vector<uint8>& str) {
+	vector<uint8> encoded(str.size() * 2);
 
 	string temp;
 
@@ -179,6 +179,12 @@ string bytesToHexString(const vector<unsigned char>& str) {
 		}
 	}
 
+	return encoded;
+}
+
+
+string bytesToHexString(const vector<uint8>& str) {
+	vector<uint8> encoded = bytesToHex(str);
 	return string(encoded.begin(), encoded.end());
 }
 
@@ -192,13 +198,18 @@ int byteFromHex(const string& str) {
 }
 
 
-vector<unsigned char> hexStringToBytes(const string& str) {
+vector<uint8> hexStringToBytes(const string& str) {
 	size_t n = str.size() / 2;
-	vector<unsigned char> bytes(n);
+	vector<uint8> bytes(n);
 	for (size_t i = 0; i < n; i++) {
 		bytes[i] = byteFromHex(str.substr(i * 2, 2));
 	}
 	return bytes;
+}
+
+
+vector<uint8> hexToBytes(const vector<uint8>& str) {
+	return hexStringToBytes(string(str.begin(), str.end()));
 }
 
 

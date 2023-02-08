@@ -10,6 +10,8 @@
 #include"StoredData.h"
 
 
+#define BS_SAVE_MEMORY false
+
 
 uint8 encodeLastByte(const uint8 valueBits, const uint8 paddingBits) {
 	return (valueBits & 0xF) | (paddingBits & 0xF0);
@@ -62,7 +64,7 @@ inline vector<uint8> decodeLength(const uint8* const bytes, const uint size_) {
 }
 
 
-vector<uint8> encrypt_(const vector<uint8>& rawData, const std::string& key, const StoredData& storedKeys, const bool saveMemory) {
+vector<uint8> encrypt(const vector<uint8>& rawData, const StoredData& storedKeys, const std::string& key) {
 	_ASSERT(storedKeys.mappings.size() == NUM_ROUNDS);
 	ShaKeySet keys(key);
 
@@ -70,11 +72,9 @@ vector<uint8> encrypt_(const vector<uint8>& rawData, const std::string& key, con
 	uint8* ptr = (uint8*)(void*)data.data();
 	uint totalSize = (data.size() * sizeof(DataBlock));
 
-	bool* tempArr = nullptr;
-
-	if (!saveMemory) {
-		tempArr = new bool[totalSize * 8];
-	}
+#if !BS_SAVE_MEMORY
+	bool* tempArr = new bool[totalSize * 8];
+#endif
 
 	for (unsigned i = 0; i < NUM_ROUNDS; i++) {
 
@@ -83,36 +83,36 @@ vector<uint8> encrypt_(const vector<uint8>& rawData, const std::string& key, con
 			storedKeys.mappings[i].mapBytes(data[j]);
 		}
 
-		if (!saveMemory) {
-			// shuffle bits normally
-			shuffleBits(ptr, totalSize, keys.data32[i], tempArr);
-		}
-		else {
-			// shuffle individual bits (no boolean array) in order to save memory
-			shuffleBitsSaveMemory(ptr, totalSize, keys.data32[i]);
-		}
+#if !BS_SAVE_MEMORY
+		// shuffle bits normally
+		shuffleBits(ptr, totalSize, keys.data32[i], tempArr);
+#else
+		// shuffle individual bits (no boolean array) in order to save memory
+		shuffleBitsSaveMemory(ptr, totalSize, keys.data32[i]);
+#endif // BS_SAVE_MEMORY
+
 	}
 
-	if (!saveMemory) {
+#if !BS_SAVE_MEMORY
 		delete[] tempArr;
-	}
+#endif
 
 	// return as bytes
 	return vector<uint8>(ptr, ptr + totalSize);
 }
 
 
-vector<uint8> encrypt(const vector<uint8>& rawData, const std::string& key, const StoredData& storedKeys) {
-	return encrypt_(rawData, key, storedKeys, false);
+string encrypt(const string& rawData, const StoredData& storedKeys, const std::string& key) {
+	return bytesToHexString(encrypt(vector<uint8>(rawData.begin(), rawData.end()), storedKeys, key));
 }
 
 
-string encrypt(const string& rawData, const std::string& key, const StoredData& storedKeys) {
-	return bytesToHexString(encrypt(vector<uint8>(rawData.begin(), rawData.end()), key, storedKeys));
+vector<uint8> encryptAsHex(const vector<uint8>& rawData, const StoredData& storedKeys, const std::string& key) {
+	return bytesToHex(encrypt(rawData, storedKeys, key));
 }
 
 
-vector<uint8> decrypt(const vector<uint8>& rawData, const std::string& key, const StoredData& storedKeys) {
+vector<uint8> decrypt(const vector<uint8>& rawData, const StoredData& storedKeys, const std::string& key) {
 	_ASSERT(storedKeys.mappings.size() == NUM_ROUNDS);
 	ShaKeySet keys(key);
 
@@ -137,53 +137,58 @@ vector<uint8> decrypt(const vector<uint8>& rawData, const std::string& key, cons
 }
 
 
-string decrypt(const string& rawData, const std::string& key, const StoredData& storedKeys) {
-	vector<uint8> decrypted = decrypt(hexStringToBytes(rawData), key, storedKeys);
+string decrypt(const string& rawData, const StoredData& storedKeys, const std::string& key) {
+	vector<uint8> decrypted = decrypt(hexStringToBytes(rawData), storedKeys, key);
 	return string(decrypted.begin(), decrypted.end());
+}
+
+
+vector<uint8> decryptFromHex(const vector<uint8>& rawData, const StoredData& storedKeys, const std::string& key) {
+	return decrypt(hexToBytes(rawData), storedKeys, key);
 }
 
 
 inline void processFile(
 	const string& inputFileName,
 	const string& outputFileName,
-	const string& key,
 	const string& storedKeysFile,
-	vector<uint8> processFunction(const vector<uint8>&, const std::string&, const StoredData&)) {
+	const string& key,
+	vector<uint8> processFunction(const vector<uint8>&, const StoredData&, const std::string&)) {
 	const vector<uint8> bytes = slurp<uint8>(inputFileName);
 	StoredData storedKeys(storedKeysFile);
-	dump<uint8>(outputFileName, processFunction(bytes, key, storedKeys));
+	dump<uint8>(outputFileName, processFunction(bytes, storedKeys, key));
 }
 
 
 void encryptFile(const string& inputFileName, const string& outputFileName, const string& storedKeysFile, const string& key) {
-	processFile(inputFileName, outputFileName, key, storedKeysFile, encrypt);
+	processFile(inputFileName, outputFileName, storedKeysFile, key, encrypt);
 }
 
 
 void decryptFile(const string& inputFileName, const string& outputFileName, const string& storedKeysFile, const string& key) {
-	processFile(inputFileName, outputFileName, key, storedKeysFile, decrypt);
+	processFile(inputFileName, outputFileName, storedKeysFile, key, decrypt);
 }
 
 
 inline void processFileAsHex(
 	const string& inputFileName,
 	const string& outputFileName,
-	const string& key,
 	const string& storedKeysFile,
-	string processFunction(const string&, const std::string&, const StoredData&)) {
+	const string& key,
+	string processFunction(const string&, const StoredData&, const std::string&)) {
 	const string data = slurps(inputFileName);
 	StoredData storedKeys(storedKeysFile);
-	dump(outputFileName, processFunction(data, key, storedKeys));
+	dump(outputFileName, processFunction(data, storedKeys, key));
 }
 
 
 void encryptFileAsHex(const string& inputFileName, const string& outputFileName, const string& storedKeysFile, const string& key) {
-	processFileAsHex(inputFileName, outputFileName, key, storedKeysFile, encrypt);
+	processFileAsHex(inputFileName, outputFileName, storedKeysFile, key, encrypt);
 }
 
 
 void decryptFileAsHex(const string& inputFileName, const string& outputFileName, const string& storedKeysFile, const string& key) {
-	processFileAsHex(inputFileName, outputFileName, key, storedKeysFile, decrypt);
+	processFileAsHex(inputFileName, outputFileName, storedKeysFile, key, decrypt);
 }
 
 

@@ -94,9 +94,9 @@ bool testBytesEncryptionAtSize(const uint dataLength, const uint keyLength) {
 	vector<uint8> data = dataKeyPair.first;
 	string key = dataKeyPair.second;
 
-	vector<uint8> encrypted = encrypt(data, key, storedKeys);
+	vector<uint8> encrypted = encrypt(data, storedKeys, key);
 
-	vector<uint8> decrypted = decrypt(encrypted, key, storedKeys);
+	vector<uint8> decrypted = decrypt(encrypted, storedKeys, key);
 
 	return (data == decrypted);
 }
@@ -111,13 +111,13 @@ bool testBytesEncryption() {
 		"Lorem Ipsum, this is a message, this is more text, the red fox jumped over the lazy dog";
 	vector<uint8> bytes(originalStr.begin(), originalStr.end());
 
-	vector<uint8> encrypted = encrypt(bytes, "encryption key", storedKeys);
+	vector<uint8> encrypted = encrypt(bytes, storedKeys, "encryption key");
 
 	if (encrypted == bytes) {
 		return false;
 	}
 
-	vector<uint8> decrypted = decrypt(encrypted, "encryption key", storedKeys);
+	vector<uint8> decrypted = decrypt(encrypted, storedKeys, "encryption key");
 
 	return (bytes == decrypted);
 }
@@ -131,15 +131,36 @@ bool testStringEncryption() {
 	const string originalStr =
 		"Lorem Ipsum, this is a message, this is more text, the red fox jumped over the lazy dog";
 
-	string encrypted = encrypt(originalStr, "encryption key", storedKeys);
+	string encrypted = encrypt(originalStr, storedKeys, "encryption key");
 
 	if (encrypted == originalStr) {
 		return false;
 	}
 
-	string decrypted = decrypt(encrypted, "encryption key", storedKeys);
+	string decrypted = decrypt(encrypted, storedKeys, "encryption key");
 
 	return (originalStr == decrypted);
+}
+
+
+// verify that vectors of bytes are encrypted and decrypted correctly when encoded as hex
+bool testHexBytesEncryption() {
+	StoredData storedKeys;
+	storedKeys.genRandomData();
+
+	const string originalStr =
+		"Lorem Ipsum, this is a message, this is more text, the red fox jumped over the lazy dog";
+	vector<uint8> bytes(originalStr.begin(), originalStr.end());
+
+	vector<uint8> encrypted = encryptAsHex(bytes, storedKeys, "encryption key");
+
+	if (encrypted == bytes) {
+		return false;
+	}
+
+	vector<uint8> decrypted = decryptFromHex(encrypted, storedKeys, "encryption key");
+
+	return (bytes == decrypted);
 }
 
 
@@ -151,7 +172,7 @@ bool testCorruptedData() {
 	const string originalStr =
 		"Lorem Ipsum, this is a message, this is more text, the red fox jumped over the lazy dog";
 
-	string encrypted = encrypt(originalStr, "encryption key", storedKeys);
+	string encrypted = encrypt(originalStr, storedKeys, "encryption key");
 
 	if (encrypted[4] != 'a') {
 		encrypted[4] = 'a';
@@ -160,7 +181,7 @@ bool testCorruptedData() {
 		encrypted[4] = 'f';
 	}
 
-	string decrypted = decrypt(encrypted, "encryption key", storedKeys);
+	string decrypted = decrypt(encrypted, storedKeys, "encryption key");
 
 	return !(originalStr == decrypted);
 }
@@ -179,8 +200,8 @@ bool testZeroVector() {
 	vector<uint8> nullVector(vectorSize, 0);
 
 	// encrypt and decrypt
-	vector<uint8> encrypted = encrypt(nullVector, "zero vector test encryption key", storedKeys);
-	vector<uint8> decrypted = decrypt(encrypted, "zero vector test encryption key", storedKeys);
+	vector<uint8> encrypted = encrypt(nullVector, storedKeys, "zero vector test encryption key");
+	vector<uint8> decrypted = decrypt(encrypted, storedKeys, "zero vector test encryption key");
 
 	// verify
 	bool encryptedIsNotZero = (encrypted != vector<uint8>(encrypted.size(), 0));
@@ -202,7 +223,7 @@ bool testStoredData() {
 	const string originalStr =
 		"Lorem Ipsum, this is a message, this is more text, the red fox jumped over the lazy dog";
 
-	const string encrypted = encrypt(originalStr, "encryption key", storedKeys1);
+	const string encrypted = encrypt(originalStr, storedKeys1, "encryption key");
 
 	if (encrypted == originalStr) {
 		return false;
@@ -211,7 +232,7 @@ bool testStoredData() {
 	StoredData storedKeys2;
 	storedKeys2.loadData(testDirectory + "test-key-filename");
 
-	const string decrypted = decrypt(encrypted, "encryption key", storedKeys2);
+	const string decrypted = decrypt(encrypted, storedKeys2, "encryption key");
 
 	return (decrypted == originalStr);
 }
@@ -231,7 +252,7 @@ bool testWrongStoredData() {
 	const string originalStr =
 		"Lorem Ipsum, this is a message, this is more text, the red fox jumped over the lazy dog";
 
-	const string encrypted = encrypt(originalStr, "encryption key", storedKeys1);
+	const string encrypted = encrypt(originalStr, storedKeys1, "encryption key");
 
 	if (encrypted == originalStr) {
 		return false;
@@ -240,7 +261,7 @@ bool testWrongStoredData() {
 	StoredData storedKeys2;
 	storedKeys2.loadData(testDirectory + "wrong-test-key-filename");
 
-	const string decrypted = decrypt(encrypted, "encryption key", storedKeys2);
+	const string decrypted = decrypt(encrypted, storedKeys2, "encryption key");
 
 	return (decrypted != originalStr);
 }
@@ -300,6 +321,10 @@ bool runTests() {
 	}
 	if (!testStringEncryption()) {
 		cout << "String encryption failed.\n";
+		return false;
+	}
+	if (!testHexBytesEncryption()) {
+		cout << "Hex encryption failed.\n";
 		return false;
 	}
 
