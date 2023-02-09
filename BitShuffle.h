@@ -128,7 +128,7 @@ void shuffleBitsSaveMemory(uint8* bytes, const uint numBytes, const uint32 seed)
 }
 
 
-void invShuffleBits(uint8* bytes, const uint numBytes, const uint32 seed) {
+void invShuffleBits(uint8* bytes, const uint numBytes, std::mt19937_64& gen) {
 	// get the array of bits
 	bool* bits = new bool[numBytes * 8];
 	setBoolArrFromBits(bits, bytes, numBytes);
@@ -136,9 +136,6 @@ void invShuffleBits(uint8* bytes, const uint numBytes, const uint32 seed) {
 	// get the permutation vector:
 	// vector[0] = 0, vector[1] = 1, vector[2] = 2, ...
 	std::vector<uint> perm = getPermutationVector(numBytes * 8);
-
-	// seed random number generator
-	std::mt19937_64 gen = getShuffleBitsGenerator(seed);
 
 	// shuffle the permutation vector
 	shuffleArray(perm.data(), perm.size(), gen);
@@ -153,6 +150,13 @@ void invShuffleBits(uint8* bytes, const uint numBytes, const uint32 seed) {
 	setBytesFromBits(bytes, numBytes, bits);
 
 	delete[] bits;
+}
+
+
+void invShuffleBits(uint8* bytes, const uint numBytes, const uint32 seed) {
+	// seed random number generator
+	std::mt19937_64 gen = getShuffleBitsGenerator(seed);
+	invShuffleBits(bytes, numBytes, gen);
 }
 
 

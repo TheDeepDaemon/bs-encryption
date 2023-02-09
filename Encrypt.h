@@ -10,12 +10,10 @@
 #include"StoredData.h"
 
 
-#define BS_SAVE_MEMORY false
-
-
 uint8 encodeLastByte(const uint8 valueBits, const uint8 paddingBits) {
 	return (valueBits & 0xF) | (paddingBits & 0xF0);
 }
+
 
 uint8 decodeLastByte(const uint8 byte) {
 	return byte & 0xF;
@@ -69,12 +67,6 @@ vector<uint8> encrypt(const vector<uint8>& rawData, const StoredData& storedKeys
 	ShaKeySet keys(key);
 
 	vector<DataBlock> data = getDataBlocks(encodeLength(rawData, keys));
-	uint8* ptr = (uint8*)(void*)data.data();
-	uint totalSize = (data.size() * sizeof(DataBlock));
-
-#if !BS_SAVE_MEMORY
-	bool* tempArr = new bool[totalSize * 8];
-#endif
 
 	for (unsigned i = 0; i < NUM_ROUNDS; i++) {
 
@@ -83,21 +75,18 @@ vector<uint8> encrypt(const vector<uint8>& rawData, const StoredData& storedKeys
 			storedKeys.mappings[i].mapBytes(data[j]);
 		}
 
-#if !BS_SAVE_MEMORY
-		// shuffle bits normally
-		shuffleBits(ptr, totalSize, keys.data32[i], tempArr);
-#else
-		// shuffle individual bits (no boolean array) in order to save memory
-		shuffleBitsSaveMemory(ptr, totalSize, keys.data32[i]);
-#endif // BS_SAVE_MEMORY
+		// seed random number generator
+		std::mt19937_64 gen = getShuffleBitsGenerator(keys.data[i]);
+
+		for (unsigned j = 0; j < data.size(); j++) {
+			shuffleBitsAsBitArray(data[j].data, sizeof(DataBlock), gen);
+		}
 
 	}
 
-#if !BS_SAVE_MEMORY
-		delete[] tempArr;
-#endif
-
 	// return as bytes
+	uint8* ptr = (uint8*)(void*)data.data();
+	uint totalSize = (data.size() * sizeof(DataBlock));
 	return vector<uint8>(ptr, ptr + totalSize);
 }
 
@@ -117,14 +106,17 @@ vector<uint8> decrypt(const vector<uint8>& rawData, const StoredData& storedKeys
 	ShaKeySet keys(key);
 
 	vector<DataBlock> data = getDataBlocks(rawData);
-	uint8* ptr = (uint8*)(void*)data.data();
-	uint totalSize = data.size() * sizeof(DataBlock);
 
 	for (unsigned i_ = 0; i_ < NUM_ROUNDS; i_++) {
 		unsigned i = NUM_ROUNDS - i_ - 1;
 
-		// unshuffle bits
-		invShuffleBits(ptr, totalSize, keys.data32[i]);
+		
+		// seed random number generator
+		std::mt19937_64 gen = getShuffleBitsGenerator(keys.data[i]);
+
+		for (unsigned j = 0; j < data.size(); j++) {
+			invShuffleBits(data[j].data, sizeof(DataBlock), gen);
+		}
 
 		// reverse bytemapping
 		for (unsigned j = 0; j < data.size(); j++) {
@@ -133,6 +125,8 @@ vector<uint8> decrypt(const vector<uint8>& rawData, const StoredData& storedKeys
 	}
 
 	// return as bytes
+	uint8* ptr = (uint8*)(void*)data.data();
+	uint totalSize = data.size() * sizeof(DataBlock);
 	return decodeLength(ptr, totalSize);
 }
 

@@ -187,6 +187,22 @@ bool testCorruptedData() {
 }
 
 
+// verify that if the key is wrong, the decryption doesnt work
+bool testWrongEncryptionKey() {
+	StoredData storedKeys;
+	storedKeys.genRandomData();
+
+	const string originalStr =
+		"Lorem Ipsum, this is a message, this is more text, the red fox jumped over the lazy dog";
+
+	string encrypted = encrypt(originalStr, storedKeys, "encryption key");
+
+	string decrypted = decrypt(encrypted, storedKeys, "wrong encryption key");
+
+	return !(originalStr == decrypted);
+}
+
+
 // verify that the zero vector does not give a zero vector when encrypted
 bool testZeroVector() {
 	StoredData storedKeys;
@@ -361,6 +377,11 @@ bool runTests() {
 
 	if (!testWrongStoredData()) {
 		cout << "Wrong stored data test failed.\n";
+		return false;
+	}
+
+	if (!testWrongEncryptionKey()) {
+		cout << "Wrong encryption key test failed.\n";
 		return false;
 	}
 
