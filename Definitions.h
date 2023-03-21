@@ -22,7 +22,7 @@ const unsigned BLOCK_LEN = 4;
 const uint BLOCK_SIZE = BLOCK_LEN * BLOCK_LEN;
 
 const unsigned NUM_ROUNDS = 10;
-const unsigned NUM_KEY_ROWS = NUM_ROUNDS + (BLOCK_SIZE / 4);
+const unsigned NUM_KEY_ROWS = NUM_ROUNDS;
 const unsigned NUM_KEY_COLS = 4;
 
 const char* BYTE_MAP_FNAME = "byte_mapping_data.bmk";

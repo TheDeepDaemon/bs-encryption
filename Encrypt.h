@@ -31,15 +31,15 @@ inline vector<uint8> encodeLength(const vector<uint8>& bytes, const ShaKeySet& k
 
 	vector<uint8> encoded((numBlocks + 1) * BLOCK_SIZE, 0);
 
-	// where to start copying from the keys
-	const uint keysBegin = ((uint)NUM_KEY_ROWS * NUM_KEY_COLS) - BLOCK_SIZE;
-
-	// where in data to start using the keys for padding
+	// where in data to start padding
 	const uint dataBlockBegin = encoded.size() - BLOCK_SIZE;
 
-	// use the key values to fill in the last block
+	// generate random bytes to fill in the last block with
+	vector<uint8> randBytes = Random::genRandBytes(BLOCK_SIZE);
+
+	// use random values to fill in the last block
 	for (uint i = 0; i < BLOCK_SIZE; i++) {
-		encoded[dataBlockBegin + i] = keys.data[keysBegin + i];
+		encoded[dataBlockBegin + i] = randBytes[i];
 	}
 
 	// copy over all data
