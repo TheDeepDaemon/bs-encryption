@@ -10,6 +10,57 @@
 #include"StoredData.h"
 
 
+// add some random noise to the input data
+vector<uint8> pepperBytes(const vector<uint8>& bytes) {
+	const int spacing = PEPPER_SPACING;
+
+	if (spacing == 0 || bytes.size() == 0) {
+		return bytes;
+	}
+
+	vector<uint8> newBytes;
+	newBytes.reserve(bytes.size() + (bytes.size() / spacing));
+
+	newBytes.push_back(bytes[0]);
+
+	for (int i = 1; i < bytes.size(); i++) {
+		if (i % spacing == 0) {
+			uint8 randByte = Random::randInt(0, 256);
+			newBytes.push_back(randByte);
+		}
+		newBytes.push_back(bytes[i]);
+	}
+
+	return newBytes;
+}
+
+
+// remove the noise
+vector<uint8> pepperBytesInverse(const vector<uint8>& bytes) {
+	const int spacing = PEPPER_SPACING;
+
+	if (spacing == 0) {
+		return bytes;
+	}
+
+	vector<uint8> newBytes;
+	int reserveSpace = round((double)bytes.size() * (double)spacing / ((double)spacing + 1.0));
+	newBytes.reserve(reserveSpace);
+
+	int j = 0;
+	for (int i = 0; i < bytes.size(); i++, j++) {
+		if (j == spacing) {
+			j = -1;
+		}
+		else {
+			newBytes.push_back(bytes[i]);
+		}
+	}
+
+	return newBytes;
+}
+
+
 uint8 encodeLastByte(const uint8 valueBits, const uint8 paddingBits) {
 	return (valueBits & 0xF) | (paddingBits & 0xF0);
 }
@@ -66,7 +117,7 @@ vector<uint8> encrypt(const vector<uint8>& rawData, const StoredData& storedKeys
 	_ASSERT(storedKeys.mappings.size() == NUM_ROUNDS);
 	ShaKeySet keys(key);
 
-	vector<DataBlock> data = getDataBlocks(encodeLength(rawData, keys));
+	vector<DataBlock> data = getDataBlocks(encodeLength(pepperBytes(rawData), keys));
 
 	for (unsigned i = 0; i < NUM_ROUNDS; i++) {
 
@@ -127,7 +178,8 @@ vector<uint8> decrypt(const vector<uint8>& rawData, const StoredData& storedKeys
 	// return as bytes
 	uint8* ptr = (uint8*)(void*)data.data();
 	uint totalSize = data.size() * sizeof(DataBlock);
-	return decodeLength(ptr, totalSize);
+
+	return pepperBytesInverse(decodeLength(ptr, totalSize));
 }
 
 
